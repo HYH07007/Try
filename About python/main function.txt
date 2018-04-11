@@ -1,0 +1,5 @@
+The meaning of statement:
+>>> if __name__ == "__main__":
+When you execute a.py, the attribution __name__ of a.py is __main__.
+However, when you execute b.py and import a.py, then the attribution __name__ of a.py is a.py but not __main__.
+So the statements in the module "if __name__=="__main__"" can only be executed when you execute a.py but not import it.
