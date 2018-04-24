@@ -1,0 +1,11 @@
+In[1]: >>> print('{0} are the apple in {1} eye.'.format('You','my'))
+Out[1]:>>> 'You are the apple in my eye.'
+
+In[2]: >>> print('{0} {1} {0}'.format('You','are'))
+Out[2]:>>> 'You are You'
+
+In[3]: >>> print('{:.2f}'.format(0.12345))
+Out[3]:>>> '0.12'
+
+In[4]: >>> print('{:b}'.format(4))
+Out[4]:>>> '100'
