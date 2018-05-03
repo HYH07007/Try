@@ -1,0 +1,4 @@
+﻿  模式匹配.cpp
+c:\users\dell\desktop\模式匹配\模式匹配\模式匹配.cpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  模式匹配.vcxproj -> C:\Users\Dell\Desktop\模式匹配\Debug\模式匹配.exe
+  模式匹配.vcxproj -> C:\Users\Dell\Desktop\模式匹配\Debug\模式匹配.pdb (Partial PDB)
