@@ -24,14 +24,16 @@ void KMP(char * s, char * pat);
 void show(char *s, char * pat, int i, int j);
 void show_mat(elem * mat);
 void transpose(elem * mat1, elem * mat2);
+void KMP_11(char * s, char * pat);
 
 int main()
 {
-	show_mat(mat1);
-	transpose(mat1, mat2);
-	printf("\n");
-	show_mat(mat2);
-	//KMP(s, pat);
+	//show_mat(mat1);
+	//transpose(mat1, mat2);
+	//printf("\n");
+	//show_mat(mat2);
+	KMP(s, pat);
+	KMP_11(s, pat);
 	system("pause");
 	return 0;
 }
@@ -121,5 +123,46 @@ void show(char *s, char * pat, int i, int j)
 		for (int k = 0;k < i - j;k++) printf("  ");
 		for (int k = 1;k < pat[0];k++) printf("%c ", pat[k]);
 		printf("\n\n");
+	}
+}
+
+
+void KMP_11(char * s, char * pat)
+{
+	// Next
+	int next[100] = { 0 };
+	next[2] = 1;
+	for (int i=3,j=1;i < pat[0] + 1;)
+	{
+		if (pat[i - 1] == pat[j])
+		{
+			next[i] = (pat[i] == pat[j + 1]) ? next[j + 1] : j + 1;
+			i++;j++;
+		}
+		else if (j == 1)
+			next[i++] = 1;
+		else
+			j = next[j];
+	}
+	for (int i = 1;i < pat[0]; i++) printf("%d ", next[i]);
+	// Pattern
+	for (int i = 1,j = 1;;)
+	{
+		if (s[i] == pat[j])
+		{
+			show(s, pat, i, j);
+			if (j == pat[0])
+			{
+				printf("Successfully patterned!\n");
+				break;
+			}
+			i++;j++;
+		}
+		else
+		{
+			show(s, pat, i, j);
+			if (j == 1) i++;
+			else j = next[j];
+		}
 	}
 }
