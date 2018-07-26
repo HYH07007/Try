@@ -1,0 +1,47 @@
+                            Floating Number
+----The double-extended-precision floating-point format is used within the FPU
+80-bit registers during floating-point mathematical processes.
+
+----Floating-point values are stored in memory using the little-endian format.Arrays are stored in the orders in the order in which the calues are defined in the directive. The .float directive is used to creat 32-bit single-precision values, while the .double directive is used to 	creat 64-bit double-precision values.
+
+Instruction:
+	fld source
+	fst destination
+		# flds or fldl:
+		.section .bss
+			# .comm simbol, length ( Declaring region in mem )
+			.lcomm data, 8
+		value1: .float 1.0
+		value2: .double 2.0
+		# FPU is a register stack.
+		flds value1	# Push single-precision floating num value1 to FPU
+		fldl value2	# Push double-precision floating num value2 to FPU
+		fstl data	# Pop value2 to data
+	# Pushing preset floating-point values
+	FLD1		# 1.0
+	FLDL2T		# log2(10)
+	FLDL2E		# log2(e)
+	FLDPI		# Pi
+	FLDLG2		# log10(2)
+	FLDLN2		# log(2)
+	FLDZ		# +0.0
+
+----The FPU register stack
+The FPU registers include eight 80-bit data registers, and three 16-bit registers called the control, status, and tag registers.
+The FPU data registers are called st(0) through st(7).
+
+Instructions:
+	FADD source: Add a 32 or 64 bits value from memory to st0 register
+	FADD %st(x), %st(0): Add st(x) to st(0) and store the result in st(0)
+	FADD %st(0), %st(x): Add st(0) to st(x) and store the result in st(x)
+	FADDP %st(0), %st(x): Add st(0) to st(x), store the result in st(x), and 		                     pop st(0)
+	FADDP : Add st(0) to st(1), store the result in st(1), and pop st(0)
+	FIADD source: Add a 16 or 32 bit integer value to st(0) and store the                    	              result in st(0)
+
+	FMUL
+	FDIV
+	FDIVR
+	FSUB
+	FSUBR
+	All above have formats like FADD.
+
