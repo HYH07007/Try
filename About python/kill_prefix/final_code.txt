@@ -1,0 +1,644 @@
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+    #include <GL/glut.h>
+    #include <iostream>
+    #include <vector>
+    #include <cmath>
+    using namespace std;
+    
+    struct Point2D
+    {
+        float _x, _y;
+        Point2D()
+        {
+            _x = 0.0f;
+            _y = 0.0f;
+        }
+        Point2D(const Point2D& p)
+        {
+            _x = p._x;
+            _y = p._y;
+        }
+        Point2D(float xx, float yy)
+        {
+            _x = xx;
+            _y = yy;
+        }
+        Point2D operator=(const Point2D& p)
+        {
+            _x = p._x;
+            _y = p._y;
+            return *this;
+        }
+        Point2D operator+(const Point2D& p)
+        {
+            Point2D temp;
+            temp._x = _x + p._x;
+            temp._y = _y + p._y;
+            return temp;
+        }
+        Point2D operator-(const Point2D& p)
+        {
+            Point2D temp(_x - p._x, _y - p._y);
+            return temp;
+        }
+        float operator*(const Point2D& p)
+        {
+            return _x * p._x + _y * p._y;
+        }
+    
+        Point2D operator*(const float k)
+        {
+            return Point2D(_x * k, _y * k);
+        }
+    
+        float length()
+        {
+            return sqrtf(_x * _x + _y * _y);
+        }
+    
+        Point2D Normalize()
+        {
+            float len = length();
+            return Point2D(_x / len, _y / len);
+        }
+    
+        void InverseDir()
+        {
+            _x = -_x;
+            _y = -_y;
+        }
+    
+        void info()
+        {
+            cout << "(" << _x << ", " << _y << ")";
+        }
+    };
+    
+    struct Line2D
+    {
+        Point2D _start;
+        Point2D _end;
+        float _length;
+    
+        Line2D() : _start(), _end()
+        {
+            _length = 0.0f;
+        }
+        Line2D(const Point2D& start, const Point2D& end) : _start(start), _end(end)
+        {}
+        Line2D(const Line2D& line) : _start(line._start), _end(line._end)
+        {}
+    
+        float length()
+        {
+            _length = (_end - _start).length();
+            return _length;
+        }
+    
+        Line2D operator = (const Line2D& line)
+        {
+            _start = line._start;
+            _end = line._end;
+        }
+    
+        Point2D GetVector()
+        {
+            return _end - _start;
+        }
+    
+        void info()
+        {
+            Point2D temp = GetVector();
+            _start.info();cout << " ==> ";_end.info(); cout << " with lenth: " << length() << " and k: " << temp._y / temp._x << endl;
+        }
+    
+        bool Have(Point2D& p)
+        {
+            cout << "Hit Point: ";p.info();cout << endl;
+            cout << "And Line: ";info(); cout << endl;
+            Point2D&& d = p - _start;
+            Point2D&& v = GetVector();
+    
+            float sx = d._x / v._x;
+            float sy = d._y / v._y;
+            cout << "Scale x, y: " << sx << ", " << sy << endl;
+    
+            return (((sx >= 0.0f) && (sx <= 1.0f)) || ((sy >= 0.0f) && (sy <= 1.0f)));
+        }
+    };
+    
+    struct Rect
+    {
+        float _left;
+        float _right;
+        float _up;
+        float _down;
+    
+        float width()
+        {
+            return _right - _left;
+        }
+        float height()
+        {
+            return _down - _up;
+        }
+    };
+    
+    struct Polygon
+    {
+        int _num;//Num of lines, not points
+        //Point2D* points;
+        //Point2D* norms;
+        vector<Point2D> points;
+        vector<Point2D> norms;
+    
+        Polygon()
+        {
+            _num = 0;
+        }
+        Polygon(const vector<Point2D>& p)
+        {
+            Set(p);
+        }
+        ~Polygon()
+        {
+            Clear();
+        }
+    
+        void Clear()
+        {
+            /*if(points)
+            {
+                delete[] points;
+                points = nullptr;
+            }
+    
+            if(norms)
+            {
+                delete[] norms;
+                norms = nullptr;
+            }*/
+            points.clear();
+            norms.clear();
+            _num = 0;
+        }
+    
+        void Set(const vector<Point2D>& p)
+        {
+            Clear();
+            _num = p.size();
+            points.resize(_num);
+            norms.resize(_num);
+            //points = new Point2D[_num];
+            for(int i = 0; i < _num; ++i)
+                points[i] = p[i];
+    
+            //norms = new Point2D[_num];
+            ComputeNormals();
+        }
+    
+        Line2D GetLine(int index)
+        {
+            Line2D temp;
+            if(index >= 0 && index < _num - 1)
+            {
+                temp._start = points[index];
+                temp._end = points[index + 1];
+            }
+            else if(index == _num - 1)
+            {
+                temp._start = points[index];
+                temp._end = points[0];
+            }
+    
+            return temp;
+        }
+    
+        Point2D GetNormal(int index)
+        {
+            Point2D temp;
+            if(index >= 0 && index < _num)
+            {
+                temp = norms[index];
+            }
+            return temp;
+        }
+    
+        void ComputeNormals()
+        {
+            for(int i = 0; i < _num; ++i)
+            {
+                Line2D now = GetLine(i);
+                Line2D next;
+                if(i == _num - 1)
+                    next = GetLine(0);
+                else
+                    next = GetLine(i + 1);
+    
+                Point2D v = now.GetVector();
+                Point2D vn = next.GetVector();
+                Point2D norm;
+                if(v._x != 0)
+                {
+                    norm._y = 1;
+                    norm._x = (-v._y) / v._x;
+                }
+                else//x and y couldn‘t be zero at same time
+                {
+                    norm._x = 1;
+                    norm._y = (-v._x) / v._y;
+                }
+    
+                if(norm * vn > 0)
+                    norm.InverseDir();
+                norms[i] = norm.Normalize();
+            }
+        }
+    
+        Point2D GetPoint(int index)
+        {
+            Point2D temp;
+            if(index >= 0 && index < _num)
+                temp = points[index];
+            return temp;
+        }
+    };
+    
+    /*
+    Global Varibles
+    */
+    const int SCREEN_WIDTH = 800;
+    const int SCREEN_HEIGHT = 600;
+    Point2D g_Start;
+    Point2D g_End;
+    Line2D src;
+    Line2D dest;
+    bool acc;
+    bool buildpoly = true;
+    bool buildenv = true;
+    int g_Count;
+    std::vector<Point2D> g_V;//for build poly
+    std::vector<Polygon> g_Polys;
+    std::vector<Line2D> g_Lines;
+    
+    int Cyrus_Beck(Line2D& src, Line2D& dest, Polygon& poly)
+    {
+        float tin = 0.0f, tout = 99999.0f;
+        Point2D&& vec = src.GetVector();
+    
+        for(int i = 0; i < poly._num; ++i)
+        {
+            Line2D&& line = poly.GetLine(i);
+            Point2D&& norm = poly.GetNormal(i);
+            float nc = vec * norm;
+            if(nc == 0)
+                continue; 
+            else
+            {
+                float hit = (line._start - src._start) * norm / nc;
+                if(nc > 0)//out
+                    tout = min(tout, hit);
+                else
+                    tin = max(tin, hit);
+            }
+        }
+    
+        if(tin <= tout)
+        {
+            dest._start = src._start + vec * tin;
+            dest._end = src._start + vec * tout;
+        }
+    
+        return tin > tout;
+    }
+    
+    int Cyrus_Beck_2(Line2D& src, Line2D& dest, Polygon& poly, float& tout, int& outline)
+    {
+        dest._start = src._start;
+        tout = 99999.0f;
+        Point2D&& vec = src.GetVector();
+    
+        for(int i = 0; i < poly._num; ++i)
+        {
+            Line2D&& line = poly.GetLine(i);
+            Point2D&& norm = poly.GetNormal(i);
+            float nc = vec * norm;
+            if(nc == 0.0f)
+                continue; 
+            else
+            {
+                float hit = (line._start - src._start) * norm / nc;
+                cout << "hit: " << hit;
+                if(hit < tout && hit > 0.00001f)
+                {
+                    Point2D&& HitPoint = src._start + vec * hit;
+                    if(line.Have(HitPoint))
+                    {
+                        tout = hit;
+                        outline = i;
+                        cout << "And On the line.";
+                    }
+                }
+                cout << endl;
+                /*if(nc > 0)//out
+                {
+                    if(hit < tout)
+                    {
+                        tout = hit;
+                        outline = i;
+                    }
+                }
+                else
+                {
+                    if(hit < tout)
+                    {
+                        tout = hit;
+                        outline = i;
+                    }
+                }*/
+            }
+        }
+        cout << "-----------tout: " << tout << endl;
+        if(tout > 0.0f)
+        {
+            dest._end = src._start + vec * tout;
+        }
+    
+        return tout < 0.0f;
+    }
+    
+    void myInit()
+    {
+        /*
+        Output Info
+        */
+        g_Count = 0;
+        acc = false;
+    
+        //glClearColor((float)0x66 / 0x100, (float)0xcc / 0x100, 1.0, 0.0);
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glColor3f(0.0f, 0.0f, 0.0f);//Map Color Black
+        glPointSize(1.0);
+        glMatrixMode(GL_PROJECTION);
+        
+        glLoadIdentity();
+        gluOrtho2D(0.0, (GLdouble)SCREEN_WIDTH, (GLdouble)SCREEN_HEIGHT, 0.0);
+        glViewport(0.0, SCREEN_WIDTH, 0.0, SCREEN_HEIGHT);
+    }
+    
+    void myMouse(int button, int state, int x, int y)
+    {
+        if(buildenv)
+        {
+            if(buildpoly)
+            {
+                if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+                {
+                    //build over
+                    cout << "building polys...\n" << "now we have " << g_V.size() << " points in list.\n" << endl;
+                    if(g_V.size() >= 3)
+                    {
+                        g_Polys.emplace_back(g_V);
+                        cout << "Build " << g_Polys.size() << "th with " << g_V.size() << " points." << endl;
+                    }
+                    else
+                    {
+                        cout << "Points doesn‘t enough!" << endl;
+                    }
+                    g_V.clear();
+                    buildpoly = false;
+                    cout << "Build " << g_Polys.size() << "th Poly Over." << endl;
+                    glutPostRedisplay();
+                }
+                if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+                {
+                    g_V.emplace_back(x, y);
+                    cout << "Add " << g_V.size() << "th Point: (" << x << ", " << y << ")." << endl;
+                    glutPostRedisplay();
+                }
+            }
+            else
+            {
+                if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+                {
+                    //build over
+                    buildenv = false;
+                    cout << "Build Env Over." << endl;
+                    cout << "Please Choose Start Point of Ray." << endl;
+                }
+                if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+                {
+                    //continue build
+                    cout << "Start Build " << g_Polys.size() + 1 << "th Poly." << endl;
+                    buildpoly = true;
+                    g_V.clear();
+                }
+            }
+            return;
+        }
+        
+    
+        if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+        {
+            buildpoly = true;
+            g_Count = 0;
+            g_Lines.clear();
+            glutPostRedisplay();
+            
+            cout << "\nNow Reset the Ray." << endl;
+            cout << "Please Choose Start Point of Ray." << endl;
+            return;
+        }
+    
+        if(button != GLUT_LEFT_BUTTON || state != GLUT_DOWN)
+            return;
+    
+    
+        switch(g_Count)
+        {
+        case 0:
+        {
+            ++g_Count;
+            g_Start._x = x;
+            g_Start._y = y;
+            src._start = g_Start;
+            cout << "Set Ray Start at (" << x << ", " << y << ")." << endl;
+            cout << "\nPlease Choose the Direction of Ray." << endl;
+        }break;
+        case 1:
+        {
+            ++g_Count;
+            g_End._x = x;
+            g_End._y = y;
+            src._end = g_End;
+            cout << "Set Ray dir at (" << x << ", " << y << ")." << endl;
+            g_Lines.emplace_back(src);
+            cout << "\nSet Ray Done.\nClick to run." << endl;
+    
+            glutPostRedisplay();
+        }break;
+        case 2:
+        {
+            cout << "\n===================================================\nReflecting..." << endl;
+            src = g_Lines[g_Lines.size() - 1];
+            int polyid = -1;
+            int lineid = -1;
+            float tout = 99998.0f;
+            Line2D tdest;
+            for(int i = 0; i < g_Polys.size(); ++i)
+            {
+                int tempid;
+                float tmpout;
+                acc = !Cyrus_Beck_2(src, dest, g_Polys[i], tmpout, tempid);
+                if(acc && tmpout < tout)
+                {
+                    lineid = tempid;
+                    tout = tmpout;
+                    polyid = i;
+                    tdest = dest;
+                }
+            }
+            if((polyid != -1) && (lineid != -1))
+            {
+                cout << "Collide " << polyid << " polyon, with " << lineid << "th line." << endl;
+                Point2D a = src.GetVector().Normalize();
+                Point2D n = g_Polys[polyid].GetNormal(lineid);
+                if(n * a > 0)
+                    n.InverseDir();
+                float c = (a * n) * 2;
+                Point2D ap = a - n * c;
+                g_Lines[g_Lines.size() - 1] = tdest;
+                //cout << "Dest Line: (" << tdest._start._x << ", " << tdest._start._y << ") ==> (" << tdest._end._x << ", " << tdest._end._y << ")." << endl;
+                cout << "Dest Line: ";tdest.info();cout << endl;
+                g_Lines.emplace_back(tdest._end, tdest._end + ap * 20);
+                //cout << "And Get a reflect ray: (" << g_Lines[g_Lines.size() - 1]._start._x << ", " << g_Lines[g_Lines.size() - 1]._start._y << ") ==> (" << g_Lines[g_Lines.size() - 1]._end._x << ", " << g_Lines[g_Lines.size() - 1]._end._y << ")." << endl;
+                //cout << "Now Line Size: " << g_Lines.size() << endl;
+                cout << "And Get a reflect ray: "; g_Lines[g_Lines.size() - 1].info();cout << endl;
+                glutPostRedisplay();
+            }
+            else
+            {
+                cout << "Cannot Hit Any Polygon!!" << endl;
+            }
+        }break;
+        }    
+    }
+    
+    void myDisplay()
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+    
+        Point2D temp;
+    
+    
+        //if(g_Polys.size() > 0)
+        //    cout << "Draw Polys. Vector[0]_start_x address: " << &g_Polys[0].points[0]._x << " And values: " << g_Polys[0].points[0]._x << endl;
+        //for(auto it : g_Polys)
+        for(auto it = g_Polys.begin(); it < g_Polys.end(); ++it)
+        {
+            glColor3f(1.0f, 1.0f, 1.0f);//Poly
+            glPointSize(3.0);
+            glBegin(GL_LINE_STRIP);
+            for(int i = 0; i < it->_num; ++i)
+            {
+                temp = it->GetPoint(i);
+                glVertex2d(temp._x, temp._y);
+            //    cout << "Draw at " << temp._x << ", " << temp._y << endl;
+            }
+            temp = it->GetPoint(0);
+            glVertex2d(temp._x, temp._y);
+            glEnd();
+    
+            //draw norms
+            glBegin(GL_LINES);
+            glColor3f(1.0f, 1.0f, 0.0f);
+            for(int i = 0; i < it->_num; ++i)
+            {
+                Line2D l = it->GetLine(i);
+                Point2D center = l.GetVector() * 0.5 + l._start;
+                temp = it->GetNormal(i) * 20;
+                glVertex2d(center._x, center._y);
+                glVertex2d(center._x + temp._x, center._y + temp._y);
+            //    cout << "Draw at " << temp._x << ", " << temp._y << endl;
+            }
+            glEnd();
+    
+        }
+    
+    
+        //if(g_Polys.size() > 0)
+        //    cout << "Draw Polys Over." << endl;
+        
+    
+        if(buildpoly && g_V.size() > 1)
+        {
+            glColor3f(1.0f, 1.0f, 1.0f);//Poly
+            glPointSize(3.0);
+        //    cout << "Draw building poly." << endl;
+            glBegin(GL_LINE_STRIP);
+    
+            for(int i = 0; i < g_V.size(); ++i)
+                glVertex2d(g_V[i]._x, g_V[i]._y);
+    
+            glEnd();
+        //    cout << "Draw building poly Over." << endl;
+        }
+            
+        if(g_Count == 2)
+        {
+            //Draw Line
+        //    cout << "Draw Lines." << endl;
+            glColor3f(1.0f, 0.0f, 0.0f);//Ray, Red
+            glPointSize(2.0);
+            glBegin(GL_LINES);
+            /*for(auto it : g_Lines)
+            {
+                glVertex2d(it._start._x, it._start._y);
+                  glVertex2d(it._end._x, it._end._y);
+            }*/
+            /*for(auto it = g_Lines.begin(); it < g_Lines.end(); ++it)
+            {
+                glVertex2d(it->_start._x, it->_start._y);
+                  glVertex2d(it->_end._x, it->_end._y);
+                  //cout << "Dest Line: (" << it->_start._x << ", " << it->_start._y << ") ==> (" << it->_end._x << ", " << it->_end._y << ")." << endl;
+            }*/
+              int size = g_Lines.size() - 1;
+              for(int i = 0; i < size; ++i)
+            {
+                glVertex2d(g_Lines[i]._start._x, g_Lines[i]._start._y);
+                  glVertex2d(g_Lines[i]._end._x, g_Lines[i]._end._y);
+                  //cout << "Dest Line: (" << it->_start._x << ", " << it->_start._y << ") ==> (" << it->_end._x << ", " << it->_end._y << ")." << endl;
+            }
+            glColor3f(0.0f, 1.0f, 0.0f);//Next Ray Dir, Green
+            glVertex2d(g_Lines[size]._start._x, g_Lines[size]._start._y);
+              glVertex2d(g_Lines[size]._end._x, g_Lines[size]._end._y);
+    
+        //    cout << "Draw Lines Over." << endl;
+              
+            glEnd();
+        }
+        
+    
+        glutSwapBuffers();
+        //cout << "Before flush" << endl;
+        //glFlush();
+        //cout << "Render Over" << endl;
+    }
+    
+    int main(int argc, char* argv[])
+    {
+        glutInit(&argc, argv);
+        glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+        //glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+        glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+        glutInitWindowPosition(20, 20);
+        glutCreateWindow("Cyrus_Beck");
+        glutDisplayFunc(myDisplay);
+        glutMouseFunc(myMouse);
+      
+        myInit();
+        glutMainLoop();
+    
+        return 0;
+    }
