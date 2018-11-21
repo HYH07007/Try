@@ -1,0 +1,3 @@
+﻿  ConsoleApplication1.cpp
+c:\users\agogow5\source\repos\consoleapplication1\consoleapplication1\consoleapplication1.cpp(40): warning C4838: 从“double”转换到“float”需要收缩转换
+  ConsoleApplication1.vcxproj -> C:\Users\agogow5\source\repos\ConsoleApplication1\Debug\ConsoleApplication1.exe

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "图形学作业4_简单几何模型的着色", "图形学作业4_简单几何模型的着色\图形学作业4_简单几何模型的着色.vcxproj", "{E41AE714-18CE-4B94-A854-520A1A26D6C0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Debug|x64.ActiveCfg = Debug|x64
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Debug|x64.Build.0 = Debug|x64
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Debug|x86.ActiveCfg = Debug|Win32
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Debug|x86.Build.0 = Debug|Win32
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Release|x64.ActiveCfg = Release|x64
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Release|x64.Build.0 = Release|x64
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Release|x86.ActiveCfg = Release|Win32
+		{E41AE714-18CE-4B94-A854-520A1A26D6C0}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F59D98E2-88B3-48C2-B8E1-E833F4E66820}
+	EndGlobalSection
+EndGlobal
